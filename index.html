@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#fff7f8">
+  <link rel="manifest" href="manifest.json">
+  <title>Reglim | Kişisel Döngü Takvimim</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Minimal Kompakt Üst Şerit */
+    .compact-stats-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      background: #ffffff;
+      border: 1px solid #f2e5ea;
+      border-radius: 18px;
+      padding: 10px 16px;
+      box-shadow: 0 4px 18px rgba(120, 75, 95, 0.03);
+    }
+    .stat-pill {
+      flex: 1;
+      min-width: 130px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 10px;
+      border-radius: 12px;
+      background: #fffdfd;
+      border: 1px solid #faf0f4;
+    }
+    .stat-pill.highlight {
+      background: var(--pink-light);
+      border-color: #f7dbe5;
+    }
+    .stat-pill-icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+    .stat-pill-content {
+      display: flex;
+      flex-direction: column;
+    }
+    .stat-pill-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+      line-height: 1.2;
+    }
+    .stat-pill-value {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    /* Üst Bar Butonları */
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .icon-btn {
+      background: #fffdfd;
+      border: 1px solid #f0dce5;
+      border-radius: 12px;
+      padding: 6px 12px;
+      font-size: 13px;
+      color: var(--pink-dark);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s ease;
+    }
+    .icon-btn:hover { background: var(--pink-light); }
+    .primary-btn {
+      background: var(--pink-dark);
+      color: #fff;
+      border-color: var(--pink-dark);
+    }
+    .primary-btn:hover {
+      background: #8e4262;
+    }
+
+    /* Takvim İşaretleri */
+    .ovulation-dot { background: #68b684; }
+    .calendar-day.ovulation-day { background: #ebf7ee; color: #2b7044; font-weight: 600; }
+    .calendar-day.fertile-day { background: #f2faf4; color: #3f7e55; }
+    
+    .calendar-day.predicted-period-range {
+      background: #faeef3;
+      color: var(--pink-dark);
+      border-color: #f2d4e0;
+    }
+    .calendar-day.predicted-day {
+      background: var(--pink-light);
+      color: var(--pink-dark);
+      font-weight: 700;
+    }
+
+    .calendar-day.has-note::after {
+      content: "";
+      position: absolute;
+      bottom: 4px;
+      width: 4px;
+      height: 4px;
+      background: var(--pink-dark);
+      border-radius: 50%;
+    }
+
+    /* Hızlı Tıklama Günlük Kayıt Modalı */
+    .day-quick-sheet {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .quick-toggle-btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid #ebdbe2;
+      background: #fffdfd;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .quick-toggle-btn.active-period {
+      background: var(--pink-light);
+      border-color: var(--pink);
+      color: var(--pink-dark);
+    }
+
+    /* Semptom & Belirti Etiketleri */
+    .symptom-group-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--pink-dark);
+      margin: 8px 0 4px;
+      text-transform: uppercase;
+    }
+    .tag-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .tag-chip {
+      padding: 5px 11px;
+      font-size: 12px;
+      border-radius: 20px;
+      border: 1px solid #ebdbe2;
+      background: #fffdfd;
+      color: var(--text);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+    .tag-chip:hover { border-color: var(--pink); background: #fff5f8; }
+    .tag-chip.active {
+      background: var(--pink-light);
+      border-color: var(--pink);
+      color: var(--pink-dark);
+      font-weight: 600;
+    }
+
+    .daily-note-area {
+      width: 100%;
+      border: 1px solid #ebdbe2;
+      border-radius: 12px;
+      padding: 10px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text);
+      background: #fffdfd;
+      resize: vertical;
+      min-height: 52px;
+      box-sizing: border-box;
+    }
+    .daily-note-area:focus { outline: none; border-color: var(--pink); }
+
+    /* Modallar */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(89, 71, 81, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 16px;
+      backdrop-filter: blur(2px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+      background: var(--white);
+      border-radius: 24px;
+      padding: 24px;
+      width: 100%;
+      max-width: 460px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.15);
+      border: 1px solid #f2e5ea;
+    }
+    .modal-box.wide { max-width: 650px; }
+    .modal-box h3 {
+      margin-top: 4px;
+      margin-bottom: 6px;
+      color: var(--pink-dark);
+      font-family: Georgia, serif;
+      font-size: 20px;
+    }
+    .modal-close-btn {
+      float: right;
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: var(--muted);
+      line-height: 1;
+    }
+
+    /* Ritim Çizgisi */
+    .trend-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      height: 75px;
+      margin-top: 8px;
+      padding-top: 6px;
+      border-bottom: 1px solid #f3e8ed;
+    }
+    .trend-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+    .trend-bar {
+      width: 100%;
+      background: var(--pink-light);
+      border-radius: 6px 6px 0 0;
+      min-height: 6px;
+    }
+    .trend-val { font-size: 11px; font-weight: 600; color: var(--pink-dark); }
+    .trend-date { font-size: 10px; color: var(--muted); }
+
+    /* Dergi Tasarımı */
+    .magazine-card {
+      position: relative;
+      border: 1px solid #f0e3eb;
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 14px;
+      background: #fffdfd;
+    }
+    .magazine-tag {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--pink-dark);
+      margin-bottom: 4px;
+      display: block;
+    }
+    .magazine-card h4 {
+      margin: 4px 0 6px;
+      font-family: Georgia, serif;
+      font-size: 16.5px;
+      color: #4a3843;
+    }
+    .magazine-card p {
+      margin: 0 0 8px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: #63525c;
+      white-space: pre-wrap;
+    }
+    .magazine-takeaway {
+      background: #fff8fa;
+      border-left: 3px solid var(--pink);
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #7d495e;
+      font-style: italic;
+    }
+
+    /* Sayfalama */
+    .history-actions { display: flex; gap: 6px; }
+    .edit-btn {
+      color: #5d6778;
+      border: 1px solid #dce2f0;
+      border-radius: 9px;
+      padding: 6px 10px;
+      background: white;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .pagination-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid #f3e8ed;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .pagination-btn {
+      padding: 6px 14px;
+      border: 1px solid #ebd4de;
+      background: #fffdfd;
+      color: var(--pink-dark);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .pagination-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .backup-actions-vertical { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+    .backup-btn {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 13px;
+      border-radius: 10px;
+      border: 1px solid #ebd4de;
+      background: #fffdfd;
+      color: var(--pink-dark);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 500;
+    }
+    .backup-btn:hover { background: var(--pink-light); }
+    .danger-btn { border-color: #f2c7ce; color: #b3394b; background: #fff7f8; }
+    .danger-btn:hover { background: #fce8eb; }
+    #importInput { display: none; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="logo" href="#">reglim<span> ♡</span></a>
+    <div class="topbar-actions">
+      <button type="button" id="openAddPeriodModalBtn" class="icon-btn primary-btn">➕ Regl Ekle</button>
+      <button type="button" id="openMagBtn" class="icon-btn">☕ Döngü Dergisi</button>
+      <button type="button" id="openHistoryModalBtn" class="icon-btn">📖 Kayıtlarım</button>
+      <button type="button" id="openSettingsBtn" class="icon-btn">⚙️ Ayarlar</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="welcome" style="margin-bottom: 16px;">
+      <p class="eyebrow">KENDİME AYIRDIĞIM BİR ALAN</p>
+      <h1 style="font-size: clamp(24px, 3.8vw, 34px); margin: 4px 0;">Merhaba, <span>kendine iyi bak.</span></h1>
+    </section>
+
+    <!-- KOMPAKT ÖZET ŞERİDİ -->
+    <section class="compact-stats-bar">
+      <div class="stat-pill highlight">
+        <span class="stat-pill-icon">🌸</span>
+        <div class="stat-pill-content">
+          <span class="stat-pill-label">Son Başlangıç</span>
+          <span id="lastPeriod" class="stat-pill-value">Henüz yok</span>
+        </div>
+      </div>
+
+      <div class="stat-pill">
+        <span class="stat-pill-icon">🌙</span>
+        <div class="stat-pill-content">
+          <span class="stat-pill-label">Sonraki Regl (Tahmin)</span>
+          <span id="nextPeriod" class="stat-pill-value">Hesaplanmadı</span>
+        </div>
+      </div>
+
+      <div class="stat-pill">
+        <span class="stat-pill-icon">♡</span>
+        <div class="stat-pill-content">
+          <span class="stat-pill-label">Ortalama Döngü</span>
+          <span id="cycleLength" class="stat-pill-value">28 gün</span>
+        </div>
+      </div>
+
+      <div class="stat-pill">
+        <span class="stat-pill-icon">🌿</span>
+        <div class="stat-pill-content">
+          <span class="stat-pill-label">Şu Anki Evre</span>
+          <span id="currentPhase" class="stat-pill-value">-</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ODAK TAKVİM BÖLÜMÜ -->
+    <section class="panel calendar-panel" style="margin: 0;">
+      <div class="calendar-heading">
+        <div>
+          <p class="eyebrow">DÖNGÜMÜ TANIYORUM</p>
+          <h2>Döngü takvimim</h2>
+          <p class="subtitle">Bir güne dokunarak durumunu ve hislerini doğrudan kaydet. ♡</p>
+        </div>
+
+        <div class="calendar-navigation">
+          <button type="button" id="prevMonth" aria-label="Önceki ay">‹</button>
+          <h3 id="calendarMonth">Ekim 2026</h3>
+          <button type="button" id="nextMonth" aria-label="Sonraki ay">›</button>
+        </div>
+      </div>
+
+      <div class="calendar-legend">
+        <span><i class="legend-dot period-dot"></i> Regl günleri</span>
+        <span><i class="legend-dot predicted-dot"></i> Tahmini regl aralığı</span>
+        <span><i class="legend-dot ovulation-dot"></i> Doğurgan / Ovülasyon</span>
+        <span><i class="legend-dot today-dot"></i> Bugün</span>
+      </div>
+
+      <div class="calendar-grid calendar-weekdays">
+        <span>Pzt</span><span>Sal</span><span>Çar</span><span>Per</span><span>Cum</span><span>Cmt</span><span>Paz</span>
+      </div>
+
+      <div id="calendarDays" class="calendar-grid calendar-days"></div>
+
+      <p id="calendarMessage" class="calendar-message" aria-live="polite">
+        Ayrıntılarını görmek veya düzenlemek için bir güne tıkla. ♡
+      </p>
+    </section>
+
+    <!-- MİNİ RİTİM GRAFİĞİ -->
+    <article class="panel" style="padding: 16px 20px; margin-top: 16px;">
+      <p class="eyebrow">RİTMİM</p>
+      <h3 style="font-size: 16px; margin: 2px 0 6px;">Son Döngü Sürelerim</h3>
+      <div id="trendChart" class="trend-bars">
+        <p class="subtitle" style="font-size: 11px; margin: auto;">En az iki döngü kaydı gerekir.</p>
+      </div>
+    </article>
+  </main>
+
+  <footer>Bu alan senin. Kendine şefkat göstermeyi unutma. ♡</footer>
+
+  <!-- POP-UP: REGL EKLEME FORMU -->
+  <div id="addPeriodModal" class="modal-overlay">
+    <div class="modal-box">
+      <button type="button" class="modal-close-btn" id="closeAddPeriodBtn">✕</button>
+      <p class="eyebrow">DÖNGÜ GÜNLÜĞÜ</p>
+      <h3>Regl Kaydı Ekle</h3>
+      <p class="subtitle">Geçmiş veya yeni başlayan regl aralığını buradan girebilirsin.</p>
+
+      <form id="periodForm" style="margin-top: 14px;">
+        <label for="startDate">Başlangıç Tarihi</label>
+        <input id="startDate" type="date" required style="padding: 10px;">
+
+        <label for="endDate" style="margin-top: 10px;">Bitiş Tarihi (İsteğe bağlı)</label>
+        <input id="endDate" type="date" style="padding: 10px;">
+
+        <button type="submit" style="margin-top: 18px; width: 100%; padding: 12px; background: var(--pink-dark); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer;">
+          ♡ Kaydımı Ekle
+        </button>
+        <p id="formMessage" class="message" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- GÜNE TIKLAYINCA AÇILAN HIZLI GÜNLÜK KAYIT MODALI -->
+  <div id="dayDetailModal" class="modal-overlay">
+    <div class="modal-box">
+      <button type="button" class="modal-close-btn" id="closeDayDetailBtn">✕</button>
+      <p class="eyebrow" id="modalDayEyebrow">GÜN DETAYI</p>
+      <h3 id="modalDayTitle">31 Ekim 2026</h3>
+      
+      <div class="day-quick-sheet">
+        <button type="button" id="modalPeriodToggleBtn" class="quick-toggle-btn">
+          🩸 Bu Gün Regl Günü
+        </button>
+
+        <p class="symptom-group-title">Ruh Hâlim</p>
+        <div class="moods" style="margin-top: 4px;">
+          <button type="button" class="mood" data-mood="İyi"><span>☀️</span> İyi</button>
+          <button type="button" class="mood" data-mood="Hassas"><span>🌷</span> Hassas</button>
+          <button type="button" class="mood" data-mood="Yorgun"><span>☁️</span> Yorgun</button>
+          <button type="button" class="mood" data-mood="Ağrılı"><span>🌧️</span> Ağrılı</button>
+        </div>
+
+        <p class="symptom-group-title">Akış Durumu</p>
+        <div class="tag-container" id="modalFlowTags">
+          <span class="tag-chip" data-category="flow" data-val="Lekelenme">Lekelenme</span>
+          <span class="tag-chip" data-category="flow" data-val="Hafif">Hafif</span>
+          <span class="tag-chip" data-category="flow" data-val="Orta">Orta</span>
+          <span class="tag-chip" data-category="flow" data-val="Yoğun">Yoğun</span>
+        </div>
+
+        <p class="symptom-group-title">Bedenimin Sinyalleri</p>
+        <div class="tag-container" id="modalSymptomTags">
+          <span class="tag-chip" data-category="symptoms" data-val="Kramp">Kramp</span>
+          <span class="tag-chip" data-category="symptoms" data-val="Baş Ağrısı">Baş Ağrısı</span>
+          <span class="tag-chip" data-category="symptoms" data-val="Göğüs Hassasiyeti">Göğüs Hassasiyeti</span>
+          <span class="tag-chip" data-category="symptoms" data-val="Şişkinlik">Şişkinlik</span>
+          <span class="tag-chip" data-category="symptoms" data-val="Bel Ağrısı">Bel Ağrısı</span>
+          <span class="tag-chip" data-category="symptoms" data-val="Akne">Akne</span>
+        </div>
+
+        <p class="symptom-group-title">Günün Notu</p>
+        <textarea id="modalDailyNote" class="daily-note-area" placeholder="Aklından geçen, hissettiğin bir cümle..."></textarea>
+
+        <button type="button" id="saveAndCloseDayBtn" style="margin-top: 8px; padding: 12px; background: var(--pink-dark); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600;">
+          Tamamla ve Kapat ♡
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DÖNGÜ DERGİSİ MODALI -->
+  <div id="magModal" class="modal-overlay">
+    <div class="modal-box wide">
+      <button type="button" class="modal-close-btn" id="closeMagBtn">✕</button>
+      <p class="eyebrow">REGLİM MAG</p>
+      <h3>Bedenimin Ritmi & Keşifler</h3>
+      <p class="subtitle">
+        Tanı koymak için değil; döngünü, bedenini ve mevsimlerini bir dost gibi anlamak için tutulan dergi yazıları.
+      </p>
+
+      <div id="magazineList" style="margin-top: 16px;"></div>
+    </div>
+  </div>
+
+  <!-- KAYITLARIM MODALI -->
+  <div id="historyModal" class="modal-overlay">
+    <div class="modal-box">
+      <button type="button" class="modal-close-btn" id="closeHistoryModalBtn">✕</button>
+      <p class="eyebrow">GEÇMİŞİM</p>
+      <h3>Regl Kayıtlarım</h3>
+      <p class="subtitle">Kayıtlarını buradan inceleyebilir, tarihlerini düzenleyebilir veya silebilirsin.</p>
+
+      <div id="historyList" style="margin-top: 16px;"></div>
+
+      <div id="paginationBar" class="pagination-bar" style="display: none;">
+        <button type="button" id="prevPageBtn" class="pagination-btn">‹ Önceki</button>
+        <span id="pageIndicator">Sayfa 1 / 1</span>
+        <button type="button" id="nextPageBtn" class="pagination-btn">Sonraki ›</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AYARLAR & YEDEKLEME MODALI -->
+  <div id="settingsModal" class="modal-overlay">
+    <div class="modal-box">
+      <button type="button" class="modal-close-btn" id="closeSettingsBtn">✕</button>
+      <p class="eyebrow">GİZLİLİK & VERİ YÖNETİMİ</p>
+      <h3>Ayarlar ve Yedekleme</h3>
+      <p class="subtitle">
+        Tüm verilerin yalnızca bu cihazda saklanır. Cihaz değiştirirken veya geçmiş temizliği yapmadan önce yedeğini indirebilirsin.
+      </p>
+
+      <div class="backup-actions-vertical">
+        <button type="button" id="exportBtn" class="backup-btn">
+          📥 Verilerimi İndir (JSON Yedeği)
+        </button>
+        <label for="importInput" class="backup-btn">
+          📤 Yedek Dosyası Yükle
+        </label>
+        <input type="file" id="importInput" accept=".json">
+        <button type="button" id="resetAllBtn" class="backup-btn danger-btn">
+          🗑️ Tüm Kayıtları Sıfırla
+        </button>
+      </div>
+      <p id="backupMessage" class="message" style="margin-top: 12px;"></p>
+    </div>
+  </div>
+
+  <!-- KAYIT DÜZENLEME MODALI -->
+  <div id="editModal" class="modal-overlay">
+    <div class="modal-box">
+      <button type="button" class="modal-close-btn" id="closeEditBtn">✕</button>
+      <p class="eyebrow">KAYDI DÜZENLE</p>
+      <h3>Regl Tarihlerini Güncelle</h3>
+      
+      <form id="editForm">
+        <input type="hidden" id="editPeriodId">
+        <label for="editStartDate">Başlangıç Tarihi</label>
+        <input id="editStartDate" type="date" required>
+
+        <label for="editEndDate">Bitiş Tarihi (İsteğe bağlı)</label>
+        <input id="editEndDate" type="date">
+
+        <button type="submit" style="margin-top: 16px; width: 100%; padding: 12px; background: var(--pink-dark); color: white; border: none; border-radius: 10px; cursor: pointer;">
+          Değişiklikleri Kaydet ♡
+        </button>
+        <p id="editMessage" class="message"></p>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "reglim-periods-v1";
+    const LOGS_KEY = "reglim-daily-logs-v1";
+    const ARTICLES_CACHE_KEY = "reglim-articles-cache-v1";
+    const ITEMS_PER_PAGE = 5;
+
+    const openAddPeriodModalBtn = document.querySelector("#openAddPeriodModalBtn");
+    const closeAddPeriodBtn = document.querySelector("#closeAddPeriodBtn");
+    const addPeriodModal = document.querySelector("#addPeriodModal");
+    const form = document.querySelector("#periodForm");
+    const startInput = document.querySelector("#startDate");
+    const endInput = document.querySelector("#endDate");
+    const message = document.querySelector("#formMessage");
+
+    const historyList = document.querySelector("#historyList");
+    const openHistoryModalBtn = document.querySelector("#openHistoryModalBtn");
+    const closeHistoryModalBtn = document.querySelector("#closeHistoryModalBtn");
+    const historyModal = document.querySelector("#historyModal");
+
+    const openMagBtn = document.querySelector("#openMagBtn");
+    const closeMagBtn = document.querySelector("#closeMagBtn");
+    const magModal = document.querySelector("#magModal");
+    const magazineList = document.querySelector("#magazineList");
+
+    const paginationBar = document.querySelector("#paginationBar");
+    const prevPageBtn = document.querySelector("#prevPageBtn");
+    const nextPageBtn = document.querySelector("#nextPageBtn");
+    const pageIndicator = document.querySelector("#pageIndicator");
+
+    const calendarMonth = document.querySelector("#calendarMonth");
+    const calendarDays = document.querySelector("#calendarDays");
+    const calendarMessage = document.querySelector("#calendarMessage");
+
+    const trendChart = document.querySelector("#trendChart");
+
+    const dayDetailModal = document.querySelector("#dayDetailModal");
+    const closeDayDetailBtn = document.querySelector("#closeDayDetailBtn");
+    const modalDayTitle = document.querySelector("#modalDayTitle");
+    const modalPeriodToggleBtn = document.querySelector("#modalPeriodToggleBtn");
+    const modalDailyNote = document.querySelector("#modalDailyNote");
+    const saveAndCloseDayBtn = document.querySelector("#saveAndCloseDayBtn");
+
+    const openSettingsBtn = document.querySelector("#openSettingsBtn");
+    const closeSettingsBtn = document.querySelector("#closeSettingsBtn");
+    const settingsModal = document.querySelector("#settingsModal");
+    const exportBtn = document.querySelector("#exportBtn");
+    const importInput = document.querySelector("#importInput");
+    const resetAllBtn = document.querySelector("#resetAllBtn");
+    const backupMessage = document.querySelector("#backupMessage");
+
+    const editModal = document.querySelector("#editModal");
+    const closeEditBtn = document.querySelector("#closeEditBtn");
+    const editForm = document.querySelector("#editForm");
+    const editPeriodId = document.querySelector("#editPeriodId");
+    const editStartDate = document.querySelector("#editStartDate");
+    const editEndDate = document.querySelector("#editEndDate");
+    const editMessage = document.querySelector("#editMessage");
+
+    let periods = loadPeriods();
+    let dailyLogs = loadDailyLogs();
+    let articles = loadCachedArticles();
+    let displayedMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    let selectedDate = getTodayString();
+    let currentHistoryPage = 1;
+
+    function loadPeriods() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        return saved ? JSON.parse(saved) : [];
+      } catch { return []; }
+    }
+
+    function savePeriods() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(periods)); } catch (e) { console.error(e); }
+    }
+
+    function loadDailyLogs() {
+      try { return JSON.parse(localStorage.getItem(LOGS_KEY) || "{}"); } catch { return {}; }
+    }
+
+    function saveDailyLogs() {
+      try { localStorage.setItem(LOGS_KEY, JSON.stringify(dailyLogs)); } catch (e) { console.error(e); }
+    }
+
+    function loadCachedArticles() {
+      try {
+        return JSON.parse(localStorage.getItem(ARTICLES_CACHE_KEY) || "[]");
+      } catch { return []; }
+    }
+
+    // articles.json dosyasından asenkron veri çekme
+    async function fetchArticles() {
+      try {
+        const response = await fetch("articles.json");
+        if (response.ok) {
+          articles = await response.json();
+          localStorage.setItem(ARTICLES_CACHE_KEY, JSON.stringify(articles));
+          renderMagazine();
+        }
+      } catch (err) {
+        console.warn("articles.json okunamadı, önbellek kullanılıyor:", err);
+      }
+    }
+
+    function getTodayString() {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    }
+
+    function dateToString(date) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    }
+
+    function parseLocalDate(dateString) {
+      const [year, month, day] = dateString.split("-").map(Number);
+      return new Date(year, month - 1, day, 12);
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return "Belirtilmedi";
+      return parseLocalDate(dateString).toLocaleDateString("tr-TR", {
+        day: "numeric", month: "long", year: "numeric"
+      });
+    }
+
+    function getCycleInfo() {
+      const starts = [...new Set(periods.map((p) => p.start))].sort();
+      const differences = [];
+      const durations = [];
+      const cycleHistory = [];
+
+      for (let i = 1; i < starts.length; i++) {
+        const days = Math.round(
+          (parseLocalDate(starts[i]) - parseLocalDate(starts[i - 1])) / 86400000
+        );
+        if (days >= 15 && days <= 60) {
+          differences.push(days);
+          cycleHistory.push({ start: starts[i - 1], days });
+        }
+      }
+
+      periods.forEach((p) => {
+        if (p.end && p.end >= p.start) {
+          const d = Math.round((parseLocalDate(p.end) - parseLocalDate(p.start)) / 86400000) + 1;
+          if (d >= 1 && d <= 12) durations.push(d);
+        }
+      });
+
+      const average = differences.length
+        ? Math.round(differences.reduce((sum, days) => sum + days, 0) / differences.length)
+        : 28;
+
+      const avgDuration = durations.length
+        ? Math.round(durations.reduce((sum, d) => sum + d, 0) / durations.length)
+        : 5;
+
+      const latest = starts.length ? starts[starts.length - 1] : null;
+
+      const predictedStarts = [];
+      const predictedPeriodRanges = [];
+      const predictedEndDates = [];
+      const ovulationDates = [];
+      const fertileWindows = [];
+
+      if (latest) {
+        let cursor = parseLocalDate(latest);
+
+        for (let cycle = 1; cycle <= 12; cycle++) {
+          const nextStart = new Date(cursor);
+          nextStart.setDate(nextStart.getDate() + average);
+          const nextStartStr = dateToString(nextStart);
+          predictedStarts.push(nextStartStr);
+
+          const nextEnd = new Date(nextStart);
+          nextEnd.setDate(nextEnd.getDate() + (avgDuration - 1));
+          const nextEndStr = dateToString(nextEnd);
+          predictedEndDates.push(nextEndStr);
+
+          for (let d = 0; d < avgDuration; d++) {
+            const rangeDay = new Date(nextStart);
+            rangeDay.setDate(rangeDay.getDate() + d);
+            predictedPeriodRanges.push(dateToString(rangeDay));
+          }
+
+          const ovu = new Date(nextStart);
+          ovu.setDate(ovu.getDate() - 14);
+          const ovuStr = dateToString(ovu);
+          ovulationDates.push(ovuStr);
+
+          for (let f = 5; f >= 0; f--) {
+            const fDay = new Date(ovu);
+            fDay.setDate(fDay.getDate() - f);
+            fertileWindows.push(dateToString(fDay));
+          }
+
+          cursor = nextStart;
+        }
+      }
+
+      return {
+        starts,
+        average,
+        avgDuration,
+        latest,
+        nextDate: predictedStarts[0] || null,
+        nextEndDate: predictedEndDates[0] || null,
+        predictedStarts,
+        predictedEndDates,
+        predictedPeriodRanges,
+        ovulationDates,
+        fertileWindows,
+        cycleHistory,
+        hasHistory: differences.length > 0
+      };
+    }
+
+    function isRecordedPeriodDay(dateString) {
+      return periods.some((period) => {
+        if (dateString < period.start) return false;
+        const end = period.end || period.start;
+        return dateString <= end;
+      });
+    }
+
+    function openDayDetailModal(dateString) {
+      selectedDate = dateString;
+      const log = dailyLogs[dateString] || { mood: null, flow: null, symptoms: [], note: "" };
+
+      modalDayTitle.textContent = formatDate(dateString);
+
+      const isPeriod = isRecordedPeriodDay(dateString);
+      if (isPeriod) {
+        modalPeriodToggleBtn.textContent = "✕ Regl Kaydını Kaldır";
+        modalPeriodToggleBtn.classList.add("active-period");
+      } else {
+        modalPeriodToggleBtn.textContent = "🩸 Bu Günü Regl Olarak İşaretle";
+        modalPeriodToggleBtn.classList.remove("active-period");
+      }
+
+      document.querySelectorAll("#dayDetailModal .mood").forEach((btn) => {
+        btn.classList.toggle("selected", btn.dataset.mood === log.mood);
+      });
+
+      document.querySelectorAll("#modalFlowTags .tag-chip").forEach((chip) => {
+        chip.classList.toggle("active", chip.dataset.val === log.flow);
+      });
+
+      document.querySelectorAll("#modalSymptomTags .tag-chip").forEach((chip) => {
+        chip.classList.toggle("active", (log.symptoms || []).includes(chip.dataset.val));
+      });
+
+      modalDailyNote.value = log.note || "";
+      dayDetailModal.classList.add("active");
+    }
+
+    function showSelectedDateInfo(dateString) {
+      if (!calendarMessage) return;
+      const { predictedStarts, predictedEndDates, predictedPeriodRanges, ovulationDates, fertileWindows, avgDuration } = getCycleInfo();
+      const notes = [];
+      const log = dailyLogs[dateString];
+
+      if (dateString === getTodayString()) notes.push("Bugün");
+      if (isRecordedPeriodDay(dateString)) notes.push("Kayıtlı regl günü");
+      
+      if (predictedStarts.includes(dateString)) {
+        notes.push("Tahmini regl başlangıcı");
+      } else if (predictedEndDates.includes(dateString)) {
+        notes.push(`Tahmini regl bitişi (~${avgDuration} gün)`);
+      } else if (predictedPeriodRanges.includes(dateString)) {
+        notes.push("Tahmini regl kanama günü");
+      }
+
+      if (ovulationDates.includes(dateString)) notes.push("Tahmini ovülasyon");
+      else if (fertileWindows.includes(dateString)) notes.push("Doğurgan pencere");
+
+      if (log) {
+        if (log.mood) notes.push(log.mood);
+        if (log.flow) notes.push(log.flow);
+        if (log.symptoms && log.symptoms.length) notes.push(log.symptoms.join(", "));
+        if (log.note) notes.push(`"${log.note}"`);
+      }
+
+      calendarMessage.textContent = notes.length
+        ? `${formatDate(dateString)} · ${notes.join(" · ")}`
+        : `${formatDate(dateString)} · Bu gün için kayıt bulunmuyor. Düzenlemek için tıkla.`;
+    }
+
+    function renderTrendChart(cycleHistory) {
+      if (!trendChart) return;
+      trendChart.innerHTML = "";
+
+      if (!cycleHistory || cycleHistory.length === 0) {
+        trendChart.innerHTML = '<p class="subtitle" style="font-size: 11px; margin: auto;">En az iki döngü kaydı gerekir.</p>';
+        return;
+      }
+
+      const recent = cycleHistory.slice(-5);
+      const maxDays = Math.max(...recent.map(c => c.days), 35);
+
+      recent.forEach((item) => {
+        const col = document.createElement("div");
+        col.className = "trend-col";
+
+        const val = document.createElement("span");
+        val.className = "trend-val";
+        val.textContent = `${item.days}g`;
+
+        const bar = document.createElement("div");
+        bar.className = "trend-bar";
+        const heightPct = Math.round((item.days / maxDays) * 55);
+        bar.style.height = `${heightPct}px`;
+
+        const d = parseLocalDate(item.start);
+        const dateSpan = document.createElement("span");
+        dateSpan.className = "trend-date";
+        dateSpan.textContent = d.toLocaleDateString("tr-TR", { month: "short" });
+
+        col.append(val, bar, dateSpan);
+        trendChart.appendChild(col);
+      });
+    }
+
+    function renderCalendar() {
+      if (!calendarDays || !calendarMonth) return;
+
+      const year = displayedMonth.getFullYear();
+      const month = displayedMonth.getMonth();
+
+      calendarMonth.textContent = displayedMonth.toLocaleDateString("tr-TR", {
+        month: "long", year: "numeric"
+      });
+
+      calendarDays.innerHTML = "";
+
+      const firstDay = new Date(year, month, 1);
+      const offset = (firstDay.getDay() + 6) % 7;
+      const gridStart = new Date(year, month, 1 - offset);
+
+      const { predictedStarts, predictedPeriodRanges, ovulationDates, fertileWindows } = getCycleInfo();
+
+      for (let i = 0; i < 42; i++) {
+        const date = new Date(gridStart);
+        date.setDate(gridStart.getDate() + i);
+
+        const dateString = dateToString(date);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "calendar-day";
+        button.textContent = date.getDate();
+        button.setAttribute("aria-label", formatDate(dateString));
+
+        if (date.getMonth() !== month) button.classList.add("outside-month");
+        if (isRecordedPeriodDay(dateString)) button.classList.add("period-day");
+
+        if (!isRecordedPeriodDay(dateString)) {
+          if (predictedStarts.includes(dateString)) {
+            button.classList.add("predicted-day");
+          } else if (predictedPeriodRanges.includes(dateString)) {
+            button.classList.add("predicted-period-range");
+          }
+
+          if (ovulationDates.includes(dateString)) button.classList.add("ovulation-day");
+          else if (fertileWindows.includes(dateString)) button.classList.add("fertile-day");
+        }
+
+        if (dateString === getTodayString()) button.classList.add("today");
+        if (dateString === selectedDate) button.classList.add("selected-day");
+
+        if (dailyLogs[dateString] && (dailyLogs[dateString].note || (dailyLogs[dateString].symptoms && dailyLogs[dateString].symptoms.length))) {
+          button.classList.add("has-note");
+        }
+
+        button.addEventListener("click", () => {
+          openDayDetailModal(dateString);
+        });
+
+        calendarDays.appendChild(button);
+      }
+
+      showSelectedDateInfo(selectedDate);
+    }
+
+    function renderMagazine() {
+      magazineList.innerHTML = "";
+      if (!articles || articles.length === 0) {
+        magazineList.innerHTML = '<p class="subtitle">Henüz dergi yazısı yüklenmedi.</p>';
+        return;
+      }
+
+      articles.forEach((art) => {
+        const card = document.createElement("article");
+        card.className = "magazine-card";
+
+        const tag = document.createElement("span");
+        tag.className = "magazine-tag";
+        tag.textContent = art.tag;
+
+        const title = document.createElement("h4");
+        title.textContent = art.title;
+
+        const p = document.createElement("p");
+        p.textContent = art.content;
+
+        card.append(tag, title, p);
+
+        if (art.takeaway) {
+          const t = document.createElement("div");
+          t.className = "magazine-takeaway";
+          t.textContent = art.takeaway;
+          card.appendChild(t);
+        }
+
+        magazineList.appendChild(card);
+      });
+    }
+
+    const prevBtn = document.querySelector("#prevMonth");
+    const nextBtn = document.querySelector("#nextMonth");
+
+    if (prevBtn) {
+      prevBtn.onclick = () => {
+        displayedMonth = new Date(displayedMonth.getFullYear(), displayedMonth.getMonth() - 1, 1);
+        renderCalendar();
+      };
+    }
+
+    if (nextBtn) {
+      nextBtn.onclick = () => {
+        displayedMonth = new Date(displayedMonth.getFullYear(), displayedMonth.getMonth() + 1, 1);
+        renderCalendar();
+      };
+    }
+
+    function openEditModal(period) {
+      editPeriodId.value = period.id;
+      editStartDate.value = period.start;
+      editEndDate.value = period.end || "";
+      editMessage.textContent = "";
+      editModal.classList.add("active");
+    }
+
+    function renderHistoryList(sorted) {
+      historyList.innerHTML = "";
+
+      if (sorted.length === 0) {
+        historyList.textContent = "Henüz kayıt yok. İlk kaydını ekleyebilirsin. ♡";
+        historyList.className = "subtitle";
+        paginationBar.style.display = "none";
+        return;
+      }
+
+      historyList.className = "";
+      const totalPages = Math.ceil(sorted.length / ITEMS_PER_PAGE);
+
+      if (currentHistoryPage > totalPages) currentHistoryPage = totalPages;
+      if (currentHistoryPage < 1) currentHistoryPage = 1;
+
+      const startIndex = (currentHistoryPage - 1) * ITEMS_PER_PAGE;
+      const pageItems = sorted.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+      pageItems.forEach((period) => {
+        const row = document.createElement("div");
+        row.className = "history-item";
+
+        const info = document.createElement("span");
+        info.textContent = `${formatDate(period.start)} · Bitiş: ${formatDate(period.end)}`;
+
+        const actions = document.createElement("div");
+        actions.className = "history-actions";
+
+        const editBtn = document.createElement("button");
+        editBtn.className = "edit-btn";
+        editBtn.textContent = "Düzenle";
+        editBtn.type = "button";
+        editBtn.addEventListener("click", () => openEditModal(period));
+
+        const remove = document.createElement("button");
+        remove.className = "delete-button";
+        remove.textContent = "Sil";
+        remove.type = "button";
+
+        remove.addEventListener("click", () => {
+          periods = periods.filter((p) => p.id !== period.id);
+          savePeriods();
+          render();
+        });
+
+        actions.append(editBtn, remove);
+        row.append(info, actions);
+        historyList.appendChild(row);
+      });
+
+      if (totalPages > 1) {
+        paginationBar.style.display = "flex";
+        pageIndicator.textContent = `Sayfa ${currentHistoryPage} / ${totalPages}`;
+        prevPageBtn.disabled = currentHistoryPage === 1;
+        nextPageBtn.disabled = currentHistoryPage === totalPages;
+      } else {
+        paginationBar.style.display = "none";
+      }
+    }
+
+    prevPageBtn.addEventListener("click", () => {
+      if (currentHistoryPage > 1) {
+        currentHistoryPage--;
+        const sorted = [...periods].sort((a, b) => b.start.localeCompare(a.start));
+        renderHistoryList(sorted);
+      }
+    });
+
+    nextPageBtn.addEventListener("click", () => {
+      const sorted = [...periods].sort((a, b) => b.start.localeCompare(a.start));
+      const totalPages = Math.ceil(sorted.length / ITEMS_PER_PAGE);
+      if (currentHistoryPage < totalPages) {
+        currentHistoryPage++;
+        renderHistoryList(sorted);
+      }
+    });
+
+    function render() {
+      const sorted = [...periods].sort((a, b) => b.start.localeCompare(a.start));
+      renderHistoryList(sorted);
+
+      const { average, avgDuration, latest, nextDate, nextEndDate, cycleHistory, hasHistory } = getCycleInfo();
+
+      renderTrendChart(cycleHistory);
+
+      const lastEl = document.querySelector("#lastPeriod");
+      const cycleEl = document.querySelector("#cycleLength");
+      const nextEl = document.querySelector("#nextPeriod");
+      const phaseEl = document.querySelector("#currentPhase");
+
+      if (lastEl) lastEl.textContent = latest ? formatDate(latest).replace(/\s\d{4}$/, "") : "Henüz yok";
+      if (cycleEl) cycleEl.textContent = hasHistory ? `${average} gün` : "28 gün";
+      
+      if (nextEl) {
+        if (nextDate && nextEndDate) {
+          const s = formatDate(nextDate).replace(/\s\d{4}$/, "");
+          const e = formatDate(nextEndDate).replace(/\s\d{4}$/, "");
+          nextEl.textContent = `${s} - ${e}`;
+        } else {
+          nextEl.textContent = "Hesaplanmadı";
+        }
+      }
+
+      if (latest) {
+        const today = parseLocalDate(getTodayString());
+        const lastStart = parseLocalDate(latest);
+        const dayDiff = Math.round((today - lastStart) / 86400000) + 1;
+
+        if (dayDiff > 0 && dayDiff <= (average + 10)) {
+          if (dayDiff <= avgDuration) phaseEl.textContent = "Menstrüel";
+          else if (dayDiff < average - 14) phaseEl.textContent = "Foliküler";
+          else if (dayDiff >= average - 14 && dayDiff <= average - 12) phaseEl.textContent = "Ovülasyon";
+          else phaseEl.textContent = "Luteal Faz";
+        } else {
+          phaseEl.textContent = "Bekleniyor";
+        }
+      } else {
+        phaseEl.textContent = "-";
+      }
+
+      renderCalendar();
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const start = startInput.value;
+      const end = endInput.value;
+
+      if (end && end < start) {
+        if (message) message.textContent = "Bitiş başlangıçtan önce olamaz.";
+        return;
+      }
+
+      const existing = periods.find((p) => p.start === start);
+      if (existing) {
+        existing.end = end;
+      } else {
+        periods.push({ id: `${Date.now()}-${Math.random()}`, start, end });
+      }
+
+      savePeriods();
+      render();
+
+      selectedDate = start;
+      displayedMonth = new Date(parseLocalDate(start).getFullYear(), parseLocalDate(start).getMonth(), 1);
+      renderCalendar();
+
+      form.reset();
+      addPeriodModal.classList.remove("active");
+    });
+
+    openAddPeriodModalBtn.addEventListener("click", () => {
+      if (startInput) startInput.value = selectedDate;
+      message.textContent = "";
+      addPeriodModal.classList.add("active");
+    });
+    closeAddPeriodBtn.addEventListener("click", () => addPeriodModal.classList.remove("active"));
+
+    modalPeriodToggleBtn.addEventListener("click", () => {
+      const isPeriod = isRecordedPeriodDay(selectedDate);
+      if (isPeriod) {
+        periods = periods.filter((p) => {
+          const end = p.end || p.start;
+          return !(selectedDate >= p.start && selectedDate <= end);
+        });
+        modalPeriodToggleBtn.textContent = "🩸 Bu Günü Regl Olarak İşaretle";
+        modalPeriodToggleBtn.classList.remove("active-period");
+      } else {
+        periods.push({ id: `${Date.now()}-${Math.random()}`, start: selectedDate, end: selectedDate });
+        modalPeriodToggleBtn.textContent = "✕ Regl Kaydını Kaldır";
+        modalPeriodToggleBtn.classList.add("active-period");
+      }
+      savePeriods();
+      render();
+    });
+
+    document.querySelectorAll("#dayDetailModal .mood").forEach((button) => {
+      button.addEventListener("click", () => {
+        const mood = button.dataset.mood;
+        if (!dailyLogs[selectedDate]) dailyLogs[selectedDate] = { mood: null, flow: null, symptoms: [], note: "" };
+        dailyLogs[selectedDate].mood = (dailyLogs[selectedDate].mood === mood) ? null : mood;
+        saveDailyLogs();
+        openDayDetailModal(selectedDate);
+      });
+    });
+
+    document.querySelectorAll("#modalFlowTags .tag-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const val = chip.dataset.val;
+        if (!dailyLogs[selectedDate]) dailyLogs[selectedDate] = { mood: null, flow: null, symptoms: [], note: "" };
+        dailyLogs[selectedDate].flow = (dailyLogs[selectedDate].flow === val) ? null : val;
+        saveDailyLogs();
+        openDayDetailModal(selectedDate);
+      });
+    });
+
+    document.querySelectorAll("#modalSymptomTags .tag-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const val = chip.dataset.val;
+        if (!dailyLogs[selectedDate]) dailyLogs[selectedDate] = { mood: null, flow: null, symptoms: [], note: "" };
+        if (!Array.isArray(dailyLogs[selectedDate].symptoms)) dailyLogs[selectedDate].symptoms = [];
+
+        const idx = dailyLogs[selectedDate].symptoms.indexOf(val);
+        if (idx > -1) dailyLogs[selectedDate].symptoms.splice(idx, 1);
+        else dailyLogs[selectedDate].symptoms.push(val);
+
+        saveDailyLogs();
+        openDayDetailModal(selectedDate);
+      });
+    });
+
+    modalDailyNote.addEventListener("input", (e) => {
+      if (!dailyLogs[selectedDate]) dailyLogs[selectedDate] = { mood: null, flow: null, symptoms: [], note: "" };
+      dailyLogs[selectedDate].note = e.target.value;
+      saveDailyLogs();
+    });
+
+    saveAndCloseDayBtn.addEventListener("click", () => {
+      dayDetailModal.classList.remove("active");
+      render();
+    });
+    closeDayDetailBtn.addEventListener("click", () => {
+      dayDetailModal.classList.remove("active");
+      render();
+    });
+
+    openMagBtn.addEventListener("click", () => {
+      renderMagazine();
+      magModal.classList.add("active");
+    });
+    closeMagBtn.addEventListener("click", () => magModal.classList.remove("active"));
+
+    openHistoryModalBtn.addEventListener("click", () => {
+      currentHistoryPage = 1;
+      const sorted = [...periods].sort((a, b) => b.start.localeCompare(a.start));
+      renderHistoryList(sorted);
+      historyModal.classList.add("active");
+    });
+    closeHistoryModalBtn.addEventListener("click", () => historyModal.classList.remove("active"));
+
+    openSettingsBtn.addEventListener("click", () => { backupMessage.textContent = ""; settingsModal.classList.add("active"); });
+    closeSettingsBtn.addEventListener("click", () => settingsModal.classList.remove("active"));
+
+    editForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const id = editPeriodId.value;
+      const s = editStartDate.value;
+      const en = editEndDate.value;
+      if (en && en < s) { editMessage.textContent = "Bitiş başlangıçtan önce olamaz."; return; }
+      const item = periods.find((p) => p.id === id);
+      if (item) { item.start = s; item.end = en; savePeriods(); render(); editModal.classList.remove("active"); }
+    });
+    closeEditBtn.addEventListener("click", () => editModal.classList.remove("active"));
+
+    window.addEventListener("click", (e) => {
+      if (e.target === addPeriodModal) addPeriodModal.classList.remove("active");
+      if (e.target === dayDetailModal) { dayDetailModal.classList.remove("active"); render(); }
+      if (e.target === magModal) magModal.classList.remove("active");
+      if (e.target === historyModal) historyModal.classList.remove("active");
+      if (e.target === settingsModal) settingsModal.classList.remove("active");
+      if (e.target === editModal) editModal.classList.remove("active");
+    });
+
+    exportBtn.addEventListener("click", () => {
+      const exportData = {
+        app: "Reglim", version: "2.5", exportDate: new Date().toISOString(),
+        periods, dailyLogs
+      };
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `reglim-yedek-${getTodayString()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      backupMessage.textContent = "Yedek başarıyla indirildi. ♡";
+    });
+
+    importInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const parsed = JSON.parse(event.target.result);
+          if (Array.isArray(parsed.periods)) { periods = parsed.periods; savePeriods(); }
+          if (parsed.dailyLogs && typeof parsed.dailyLogs === "object") { dailyLogs = parsed.dailyLogs; saveDailyLogs(); }
+          currentHistoryPage = 1;
+          render();
+          backupMessage.textContent = "Yedek başarıyla yüklendi! ♡";
+        } catch { backupMessage.textContent = "Dosya okunamadı. Geçerli bir JSON yedeği seçin."; }
+      };
+      reader.readAsText(file);
+      importInput.value = "";
+    });
+
+    resetAllBtn.addEventListener("click", () => {
+      if (confirm("Tüm verileri silmek istediğinden emin misin?\n\nBu işlem geri alınamaz.")) {
+        periods = []; dailyLogs = {};
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(LOGS_KEY);
+        localStorage.removeItem("reglim-mood-v1");
+        currentHistoryPage = 1;
+        render();
+        backupMessage.textContent = "Tüm veriler kalıcı olarak temizlendi.";
+      }
+    });
+
+    render();
+    fetchArticles();
+  </script>
+</body>
+</html>

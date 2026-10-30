@@ -1,0 +1,30 @@
+[
+  {
+    "id": "mag-1",
+    "tag": "Kış Mevsimi · Gün 1-5",
+    "title": "Menstrüel Faz: İçe Çekilme ve Yenilenme",
+    "content": "Östrojen ve progesteron seviyelerinin taban yaptığı bu evre, rahmin kendini sıfırladığı zamandır. Bedenin enerjisi doğal olarak içeriye yönelir; metabolizma hafifçe yavaşlar. Bu günlerde dinlenmek son derece olağandır.",
+    "takeaway": "Küçük bir ritüel: Sıcak su torbası, magnezyum zengini besinler ve 'hayır' diyebilme özgürlüğü."
+  },
+  {
+    "id": "mag-2",
+    "tag": "İlkbahar Mevsimi · Gün 6-13",
+    "title": "Foliküler Faz: Yükselen Enerji ve Netlik",
+    "content": "Yeni foliküller gelişirken östrojen kademeli olarak yükselir. Östrojen, dopamin ve serotoninle el ele vererek zihinsel berraklık ve hafif bir neşe getirir. Kendini daha hareketli ve üretken hissetmen tesadüf değildir.",
+    "takeaway": "Küçük bir ritüel: Yeni bir kitaba başlamak, ertelediğin planları hayata geçirmek ve hafif egzersizler."
+  },
+  {
+    "id": "mag-3",
+    "tag": "Yaz Mevsimi · Gün 14-16",
+    "title": "Ovülasyon: Işığın ve Sosyalliğin Zirvesi",
+    "content": "Luteinizan hormon (LH) ve östrojenin tavan yaptığı an. Bedenin doğurganlık sinyalleri verirken özgüven, iletişim kurma isteği ve sosyal enerjinin en yüksek olduğu evredir.",
+    "takeaway": "Küçük bir ritüel: Sosyal buluşmalar, önemli konuşmalar ve bedeninin canlılığını kutlamak."
+  },
+  {
+    "id": "mag-4",
+    "tag": "Sonbahar Mevsimi · Gün 17-28",
+    "title": "Luteal Faz: Yavaşlama ve Sınırları Belirleme",
+    "content": "Yumurtlamadan sonra sahneye progesteron çıkar. Bu hormon bedeni sakinleştirmeye çalışırken, bazen su tutulumuna (şişkinlik) veya ani duygu dalgalanmalarına yol açabilir.",
+    "takeaway": "Küçük bir ritüel: Uyku saatlerine özen göstermek, kafeini azaltmak ve kendine karşı fazladan sabırlı olmak."
+  }
+]
