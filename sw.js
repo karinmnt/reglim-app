@@ -1,5 +1,5 @@
-const CACHE_NAME = "reglim-cache-v1";
-const ASSETS = ["/", "/index.html", "/style.css"];
+const CACHE_NAME = "reglim-cache-v2";
+const ASSETS = ["./", "./index.html", "./style.css", "./articles.json"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
