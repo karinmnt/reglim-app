@@ -4,7 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#fff7f8">
-  <link rel="manifest" href="manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Reglim">
+  <link rel="manifest" href="./manifest.json">
   <title>Reglim | Kişisel Döngü Takvimim</title>
   <link rel="stylesheet" href="style.css">
   <style>
@@ -690,10 +694,9 @@
       } catch { return []; }
     }
 
-    // articles.json dosyasından asenkron veri çekme
     async function fetchArticles() {
       try {
-        const response = await fetch("articles.json");
+        const response = await fetch("./articles.json");
         if (response.ok) {
           articles = await response.json();
           localStorage.setItem(ARTICLES_CACHE_KEY, JSON.stringify(articles));
@@ -1350,6 +1353,13 @@
         backupMessage.textContent = "Tüm veriler kalıcı olarak temizlendi.";
       }
     });
+
+    // Service Worker Kaydı (PWA Desteği)
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
 
     render();
     fetchArticles();
